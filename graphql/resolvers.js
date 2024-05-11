@@ -3,9 +3,8 @@ const GRAPHQL_ERROR_MESSAGES = require("../messages/graphQlMessages");
 const USER_ERROR_MESSAGES = require("../messages/userMessages");
 
 const validateName = async (value) => {
-  const nameRegex = /^[a-zA-Z\s]*$/;
-  if (!nameRegex.test(value)) {
-    return new Error(USER_ERROR_MESSAGES.INVALID_NAME);
+  if (!/^[a-zA-Z\s]*$/.test(value)) {
+    return false;
   }
   return true;
 };
@@ -13,23 +12,25 @@ const validateName = async (value) => {
 const checkEmailFormat = async (value) => {
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   if (!emailRegex.test(value)) {
-    return new Error(USER_ERROR_MESSAGES.INVALID_EMAIL_FORMAT);
+    return false;
   }
-
   return true;
 };
 
 const findSingleUserByEmail = async (value) => {
-  const existingUser = await User.findOne({ email: value });
+  return await User.find({ email: value });
+};
+
+const validateEmail = async (value) => {
+  const emailFormat = await checkEmailFormat(value);
+  if (!emailFormat) {
+    return new Error(USER_ERROR_MESSAGES.INVALID_EMAIL_FORMAT);
+  }
+  const existingUser = await findSingleUserByEmail(value);
   if (existingUser) {
     return new Error(GRAPHQL_ERROR_MESSAGES.USER_EXISTS);
   }
   return true;
-};
-
-const validateEmail = async (value) => {
-  await checkEmailFormat(value);
-  await findSingleUserByEmail(value);
 };
 
 const createNewUser = async (name, email) => {
@@ -51,11 +52,22 @@ const resolvers = {
         return new Error(GRAPHQL_ERROR_MESSAGES.FETCH_UNABLED);
       }
     },
+
+    getSingleUser: async (_, { email }) => {
+      const existingUser = await findSingleUserByEmail(email);
+      if (!existingUser) {
+        return new Error(GRAPHQL_ERROR_MESSAGES.USERS_NOT_FOUND);
+      }
+      return existingUser;
+    },
   },
 
   Mutation: {
     addUser: async (_, { name, email }) => {
-      await validateName(name);
+      const nameFormat = await validateName(name);
+      if (!nameFormat) {
+        return new Error(USER_ERROR_MESSAGES.INVALID_NAME);
+      }
       await validateEmail(email);
       const newUser = await createNewUser(name, email);
       if (!newUser) {
