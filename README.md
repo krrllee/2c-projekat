@@ -5,7 +5,7 @@
 - Pokretanje aplikacije se vrsi u PowerShell konzoli komandom `node index.js`
 - Aplikacija se pokrece na portu 4000, a testiranje je moguce obaviti pristupom sledecem  URL-u : `http://localhost:4000/graphql`
 
-- [Testiranje (VIDEO) ](https://www.youtube.com/watch?v=3ueIhd83OoA)
+- [Testiranje (VIDEO) ](https://www.youtube.com/watch?v=QVSmZ8rEcKw)
 
 
 
